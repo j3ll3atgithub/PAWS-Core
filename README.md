@@ -73,5 +73,27 @@ Masternodes require a collateral of 1,000 PAWS and can be run on the Tor network
 <tr><th>1</th><th>280,000-289,999</th><th>7.8</th><th>5.46</th><th>0.78</th><th>1 WEEK</th></tr>
 <tr><th>1</th><th>290,000-299,999</th><th>7.7</th><th>5.39</th><th>0.77</th><th>1 WEEK</th></tr>
 <tr><th>1</th><th>300,000-309,999</th><th>7.6</th><th>5.32</th><th>0.76</th><th>1 WEEK</th></tr>
+<tr><th>1</th><th>310,000-319,999</th><th>7.5</th><th>5.25</th><th>0.75</th><th>1 WEEK</th></tr>
+<tr><th>1</th><th>320,000-329,999</th><th>7.4</th><th>5.18</th><th>0.74</th><th>1 WEEK</th></tr>
+<tr><th>1</th><th>330,000-339,999</th><th>7.3</th><th>5.11</th><th>0.73</th><th>1 WEEK</th></tr>
+<tr><th>1</th><th>340,000-349,999</th><th>7.2</th><th>5.04</th><th>0.72</th><th>1 WEEK</th></tr>
+<tr><th>1</th><th>350,000-359,999</th><th>7.1</th><th>4.97</th><th>0.71</th><th>1 WEEK</th></tr>
+<tr><th>1</th><th>360,000-369,999</th><th>7.0</th><th>4.90</th><th>0.60</th><th>1 WEEK</th></tr>
+<tr><th>1</th><th>370,000-379,999</th><th>6.9</th><th>4.83</th><th>0.69</th><th>1 WEEK</th></tr>
+<tr><th>1</th><th>380,000-389,999</th><th>6.8</th><th>4.76</th><th>0.68</th><th>1 WEEK</th></tr>
+<tr><th>1</th><th>390,000-399,999</th><th>6.7</th><th>4.69</th><th>0.67</th><th>1 WEEK</th></tr>
+<tr><th>1</th><th>400,000-409,999</th><th>6.6</th><th>4.62</th><th>0.66</th><th>1 WEEK</th></tr>
+<tr><th>1</th><th>410,000-419,999</th><th>6.5</th><th>4.55</th><th>0.65</th><th>1 WEEK</th></tr>
+<tr><th>1</th><th>420,000-429,999</th><th>6.4</th><th>4.48</th><th>0.64</th><th>1 WEEK</th></tr>
+<tr><th>1</th><th>430,000-439,999</th><th>6.3</th><th>4.41</th><th>0.63</th><th>1 WEEK</th></tr>
+<tr><th>1</th><th>440,000-449,999</th><th>6.2</th><th>4.34</th><th>0.62</th><th>1 WEEK</th></tr>
+<tr><th>1</th><th>450,000-459,999</th><th>6.1</th><th>4.27</th><th>0.61</th><th>1 WEEK</th></tr>
+<tr><th>1</th><th>460,000-469,999</th><th>6.0</th><th>4.20</th><th>0.60</th><th>1 WEEK</th></tr>
+<tr><th>1</th><th>470,000-479,999</th><th>5.9</th><th>4.13</th><th>0.59</th><th>1 WEEK</th></tr>
+<tr><th>1</th><th>480,000-489,999</th><th>5.8</th><th>4.06</th><th>0.58</th><th>1 WEEK</th></tr>
+<tr><th>1</th><th>490,000-499,999</th><th>5.7</th><th>3.99</th><th>0.57</th><th>1 WEEK</th></tr>
+<tr><th>1</th><th>500,000-509,999</th><th>5.6</th><th>3.92</th><th>0.56</th><th>1 WEEK</th></tr>
+<tr><th>1</th><th>500,000-509,999</th><th>5.5</th><th>3.85</th><th>0.55</th><th>1 WEEK</th></tr>
+<tr><th>1</th><th>520,000-onwards</th><th>5.0</th><th>3.50</th><th>0.50</th><th>1 WEEK</th></tr>
 </tr></tbody></table>
 <a href="http://paws.fund" title="PAWS website" target="_blank">Visit our website for more details</a>
