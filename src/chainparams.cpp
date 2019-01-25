@@ -56,11 +56,24 @@ static Checkpoints::MapCheckpoints mapCheckpoints =
     boost::assign::map_list_of
     (0, uint256("00000ec09839a7ed9b5854ae86c724f02d1883011275595a91e069dc129c263c"))
 	(1, uint256("00000568e020f11d3483090ab4a35423aaf0dbbd06de09a6d391a034dd8d9bdd"))
-	(2, uint256("000002f687d4577f5effaf255c83255bb8c73b8f2dde13f05d1a15f93a31f4dc"));
+	(2, uint256("000002f687d4577f5effaf255c83255bb8c73b8f2dde13f05d1a15f93a31f4dc"))
+	(50, uint256("00000439ff7680665e534755f0323578432dd64f129216dbb1e87c6605f17fa0"))
+	(100, uint256("000005f2ef4f74cc57244da598320bb071204ea586538bd38e3b6136c20bfcd3"))
+	(500, uint256("000000006a45238d2dadf3ad55c6e28c33920e63c3bb7d60e7b3fb35960e5785"))
+	(1000, uint256("a529a704f3b407961288cd8dafcf1e495b9465e7d37d630912765003ffba9e38"))
+	(5000, uint256("3114c4579bf5a69b6bf83b1ed4d889965d2475ad5571913b68874fdd35a29e94"))
+	(10000, uint256("a8b2e069bdab5f4653e9fca8255050f32bd1db8b68c04de74b4a02e64b449cc2"))
+	(25000, uint256("5add80587df0dae85dac4e187aba462d57f1d9e7d4aa48e8ec72cdac9bfa8c37"))
+	(50000, uint256("a0ceebc0a4cb9f9e56d61a7694c34d4f7a793b0a7b563d88795dea526edeb9c1"))
+	(75000, uint256("23c7f5d7c6ff04050eb0b9ce3295962d70e112f12e3919d02a3142a481b8333e"))
+	(100000, uint256("31b940aef0385d733ea084da759028e460321d1bf190c8b21c25ecff8b32df51"))
+	(110000, uint256("e0d1534e2d61f25e8bfa77bd90c77a847424292c1b31d164f83ba49fb6d97279"))
+	(120000, uint256("b99780a4dab5713944111ca9d3b6677edc82130549fb29cf73e89af4c0f25744"))
+	(133033, uint256("b19a49ef3c67e6d2df8fbdcda1fc2476fc0d2cf30fff5e6c452f4408ae0c7922"));
 static const Checkpoints::CCheckpointData data = {
     &mapCheckpoints,
     1540364046, // * UNIX timestamp of last checkpoint block
-    3,    // * total number of transactions between genesis and last checkpoint
+    278051,    // * total number of transactions between genesis and last checkpoint
                 //   (the tx=... number in the SetBestChain debug.log lines)
     3000        // * estimated number of transactions per day after checkpoint
 };
@@ -151,7 +164,6 @@ public:
         assert(hashGenesisBlock == uint256("00000ec09839a7ed9b5854ae86c724f02d1883011275595a91e069dc129c263c"));
         assert(genesis.hashMerkleRoot == uint256("3449867fb04c7671f02a5bf91b0f4d9637c612d86c3e026851e93b417afc454e"));
 		
-		vSeeds.push_back(CDNSSeedData("paws.fund", "paws.fund"));
 		vSeeds.push_back(CDNSSeedData("45.32.145.142", "45.32.145.142"));
 		vSeeds.push_back(CDNSSeedData("95.179.200.213", "95.179.200.213"));
 		vSeeds.push_back(CDNSSeedData("45.63.10.156", "45.63.10.156"));
