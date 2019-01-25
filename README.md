@@ -5,8 +5,10 @@
 
 A peer-to-peer digital currency based on <a href="https://github.com/PIVX-Project/PIVX" title="PIVX" target="_blank">PIVX</a> codebase that provides fast, zero cost payments to anywhere around the world, without any third-party intervention. PAWS is a fully decentralized global payment network allowing individuals to have full control of their finances.
 
-Masternodes require a collateral of 1,000 PAWS and can be run on the Tor network for greater privacy. All transactions on the network are fully verifiable with a built-in blockchain explorer within the software itself. Thereward ratio of staking to masternodes depends on the block number.</p>
-<a href="http://paws.fund" title="PAWS website" target="_blank">Visit our website for more details</a>
+Masternodes require a collateral of 1,000 PAWS and can be run on the Tor network for greater privacy. All transactions on the network are fully verifiable with a built-in blockchain explorer within the software itself. The reward ratio of staking to masternodes depends on the block number.
+
+For a step-by-step masternode setup see [PAWS masternode setup guide](https://github.com/pawsfund/PAWS-Core/blob/master/doc/masternode-install.md).</p>
+<a href="http://paws.fund" title="PAWS website" target="_blank">For more details about PAWS.fund visit our website</a>
 <table>
 <tbody>
 <tr><td><strong>01.</strong></td><td>Donation Tracking Tool</td></tr>
