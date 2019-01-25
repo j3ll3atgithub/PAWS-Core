@@ -93,7 +93,7 @@ Masternodes require a collateral of 1,000 PAWS and can be run on the Tor network
 <tr><th>1</th><th>480,000-489,999</th><th>5.8</th><th>4.06</th><th>0.58</th><th>1 WEEK</th></tr>
 <tr><th>1</th><th>490,000-499,999</th><th>5.7</th><th>3.99</th><th>0.57</th><th>1 WEEK</th></tr>
 <tr><th>1</th><th>500,000-509,999</th><th>5.6</th><th>3.92</th><th>0.56</th><th>1 WEEK</th></tr>
-<tr><th>1</th><th>500,000-509,999</th><th>5.5</th><th>3.85</th><th>0.55</th><th>1 WEEK</th></tr>
+<tr><th>1</th><th>510,000-519,999</th><th>5.5</th><th>3.85</th><th>0.55</th><th>1 WEEK</th></tr>
 <tr><th>1</th><th>520,000-onwards</th><th>5.0</th><th>3.50</th><th>0.50</th><th>1 WEEK</th></tr>
 </tr></tbody></table>
 <a href="http://paws.fund" title="PAWS website" target="_blank">Visit our website for more details</a>
