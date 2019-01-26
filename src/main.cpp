@@ -2003,10 +2003,8 @@ bool GetTransaction(const uint256& hash, CTransaction& txOut, uint256& hashBlock
                     return error("%s : txid mismatch", __func__);
                 return true;
             }
-			
-			// transaction not found in the index, nothing more can be done
-            return false;
-			
+            // transaction not found in the index, nothing more can be done
+            return false;	
         }
 
         if (fAllowSlow) { // use coin database to locate block that contains transaction, and scan it
@@ -6374,18 +6372,18 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 int ActiveProtocol()
 {
 
-    // SPORK_14 was used for 70910. Leave it 'ON' so they don't see > 70910 nodes. They won't react to SPORK_15
+    // SPORK_14 is used for 70002. Leave it 'ON' so they don't see 70001 nodes. They won't react to SPORK_15
     // messages because it's not in their code
 
-/*    if (IsSporkActive(SPORK_14_NEW_PROTOCOL_ENFORCEMENT))
+    if (IsSporkActive(SPORK_14_NEW_PROTOCOL_ENFORCEMENT))
             return MIN_PEER_PROTO_VERSION_AFTER_ENFORCEMENT;
-*/
 
-    // SPORK_15 is used for 70911. Nodes < 70911 don't see it and still get their protocol version via SPORK_14 and their
+    // SPORK_15 is used for 70001. Nodes with 70002 don't see it and still get their protocol version via SPORK_14 and their
     // own ModifierUpgradeBlock()
 
-    if (IsSporkActive(SPORK_15_NEW_PROTOCOL_ENFORCEMENT_2))
-            return MIN_PEER_PROTO_VERSION_AFTER_ENFORCEMENT;
+	/* if (IsSporkActive(SPORK_15_NEW_PROTOCOL_ENFORCEMENT_2))
+            return MIN_PEER_PROTO_VERSION_AFTER_ENFORCEMENT; */
+
     return MIN_PEER_PROTO_VERSION_BEFORE_ENFORCEMENT;
 }
 

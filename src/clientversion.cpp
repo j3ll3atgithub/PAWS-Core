@@ -18,7 +18,7 @@ const std::string CLIENT_NAME("PAWS Core");
 /**
  * Client version number
  */
-#define CLIENT_VERSION_SUFFIX " Airedale"
+#define CLIENT_VERSION_SUFFIX " Blue Lacy"
 
 
 /**
