@@ -7,7 +7,7 @@ COIN_DAEMON='pawsd'
 COIN_CLI='paws-cli'
 COIN_PATH='/usr/local/bin/'
 COIN_REPO='https://github.com/pawsfund/paws-core.git'
-COIN_TGZ='https://github.com/pawsfund/PAWS-Core/releases/download/v1.0.0.0/paws-1.0.0.0-x86_64-linux-gnu.zip'
+COIN_TGZ='https://github.com/pawsfund/PAWS-Core/releases/download/v1.1.0.0/paws-1.1.0.0-x86_64-linux-gnu.zip'
 COIN_ZIP=$(echo $COIN_TGZ | awk -F'/' '{print $NF}')
 COIN_NAME='PAWS'
 COIN_PORT=34120
@@ -28,7 +28,7 @@ purgeOldInstallation() {
     echo -e "${GREEN}Searching and removing old $COIN_NAME files and configurations${NC}"
     #kill wallet daemon
     sudo killall pawsd > /dev/null 2>&1
-    sleep 5
+    sleep 15
     #remove old ufw port allow
     sudo ufw delete allow 34120/tcp > /dev/null 2>&1
     #remove old files
@@ -294,7 +294,7 @@ function setup_node() {
 ##### Main #####
 clear
 
-#purgeOldInstallation
+purgeOldInstallation
 checks
 prepare_system
 create_swap
