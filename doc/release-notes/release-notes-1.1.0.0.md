@@ -1,9 +1,7 @@
-PAWS v1.1.0.0 Blue Lacy Release notes
-
 Mandatory Update
 ====================
 
-v1.1.0.0 is an MANDATORY UPDATE for all wallets and masternodes, and all nodes are required to be upgraded by January 31st for them to continue functioning on the latest blockchain.
+v1.1.0.0 is a MANDATORY UPDATE for all wallets and masternodes, and all nodes are required to be upgraded by January 31st for them to continue functioning on the latest blockchain.
 
 This release includes a fix for a potential block spam vulnerability (credits to <a href="https://github.com/phoreproject">Phore project</a>), some other bugfixes and upstream merges from PIVX codebase.
 
