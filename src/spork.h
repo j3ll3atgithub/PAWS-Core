@@ -1,5 +1,6 @@
 // Copyright (c) 2014-2016 The Dash developers
 // Copyright (c) 2016-2017 The PIVX developers
+// Copyright (c) 2018-2019 The PAWS developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -27,7 +28,7 @@ using namespace boost;
     Sporks 11,12, and 16 to be removed with 1st zerocoin release
 */
 #define SPORK_START 10001
-#define SPORK_END 10017
+#define SPORK_END 10021
 
 #define SPORK_2_SWIFTTX 10001
 #define SPORK_3_SWIFTTX_BLOCK_FILTERING 10002
@@ -44,6 +45,10 @@ using namespace boost;
 #define SPORK_16_ZEROCOIN_MAINTENANCE_MODE 10015
 #define SPORK_17_EMERGENCY_FUND 10016
 #define SPORK_18_OPERATION_FUND 10017
+#define SPORK_19_LOCK_OBFS 10018
+#define SPORK_20_SPAM_CHK 10019
+#define SPORK_21_STAKE_REQ_AG 10020
+#define SPORK_22_STAKE_REQ_SZ 10021
 
 #define SPORK_2_SWIFTTX_DEFAULT 978307200                         //2001-1-1
 #define SPORK_3_SWIFTTX_BLOCK_FILTERING_DEFAULT 1424217600        //2015-2-18
@@ -57,8 +62,12 @@ using namespace boost;
 #define SPORK_14_NEW_PROTOCOL_ENFORCEMENT_DEFAULT 4070908800      //OFF
 #define SPORK_15_NEW_PROTOCOL_ENFORCEMENT_2_DEFAULT 4070908800    //OFF
 #define SPORK_16_ZEROCOIN_MAINTENANCE_MODE_DEFAULT 1540360800     //ON
-#define SPORK_17_EMERGENCY_FUND_DEFAULT 0                         // 0 % 
-#define SPORK_18_OPERATION_FUND_DEFAULT 0                         // 0 %
+#define SPORK_17_EMERGENCY_FUND_DEFAULT 0                         //0%
+#define SPORK_18_OPERATION_FUND_DEFAULT 0                         //0%
+#define SPORK_19_LOCK_OBFS_DEFAULT 4070908800                     //OFF
+#define SPORK_20_SPAM_CHK_DEFAULT 4070908800                      //OFF
+#define SPORK_21_STAKE_REQ_AG_DEFAULT 4070908800                  //OFF
+#define SPORK_22_STAKE_REQ_SZ_DEFAULT 4070908800                  //OFF
 
 class CSporkMessage;
 class CSporkManager;

@@ -1,5 +1,6 @@
 // Copyright (c) 2014-2015 The Dash developers
 // Copyright (c) 2015-2017 The PIVX developers
+// Copyright (c) 2018-2019 The PAWS developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,6 +10,7 @@
 #include "main.h"
 #include "masternodeman.h"
 #include "script/sign.h"
+#include "spork.h"
 #include "swifttx.h"
 #include "ui_interface.h"
 #include "util.h"
@@ -47,6 +49,8 @@ void CObfuscationPool::ProcessMessageObfuscation(CNode* pfrom, std::string& strC
 {
     if (fLiteMode) return; //disable all Obfuscation/Masternode related functionality
     if (!masternodeSync.IsBlockchainSynced()) return;
+
+    if (IsSporkActive(SPORK_19_LOCK_OBFS)) return;
 
     if (strCommand == "dsa") { //Obfuscation Accept Into Pool
 
@@ -2284,6 +2288,8 @@ void CObfuscationPool::RelayCompletedTransaction(const int sessionID, const bool
 void ThreadCheckObfuScationPool()
 {
     if (fLiteMode) return; //disable all Obfuscation/Masternode related functionality
+
+    if (IsSporkActive(SPORK_19_LOCK_OBFS)) return;
 
     // Make this thread recognisable as the wallet flushing thread
     RenameThread("paws-obfuscation");

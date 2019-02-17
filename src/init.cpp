@@ -168,9 +168,9 @@ void PrepareShutdown()
 {
     fRequestShutdown = true;  // Needed when we shutdown the wallet
     fRestartRequested = true; // Needed when we restart the wallet
-	
+
 	ShutdownRPCMining();
-	
+
     LogPrintf("%s: In progress...\n", __func__);
     static CCriticalSection cs_Shutdown;
     TRY_LOCK(cs_Shutdown, lockShutdown);
@@ -527,6 +527,10 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-rpcsslprivatekeyfile=<file.pem>", strprintf(_("Server private key (default: %s)"), "server.pem"));
     strUsage += HelpMessageOpt("-rpcsslciphers=<ciphers>", strprintf(_("Acceptable ciphers (default: %s)"), "TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH"));
 
+    strUsage += HelpMessageOpt("-blockspamfilter=<n>", strprintf(_("Use block spam filter (default: %u)"), DEFAULT_BLOCK_SPAM_FILTER));
+    strUsage += HelpMessageOpt("-blockspamfiltermaxsize=<n>", strprintf(_("Maximum size of the list of indexes in the block spam filter (default: %u)"), DEFAULT_BLOCK_SPAM_FILTER_MAX_SIZE));
+    strUsage += HelpMessageOpt("-blockspamfiltermaxavg=<n>", strprintf(_("Maximum average size of an index occurrence in the block spam filter (default: %u)"), DEFAULT_BLOCK_SPAM_FILTER_MAX_AVG));
+
     return strUsage;
 }
 
@@ -538,7 +542,7 @@ std::string LicenseInfo()
            "\n" +
            FormatParagraph(strprintf(_("Copyright (C) 2015-%i The PIVX Core Developers"), COPYRIGHT_YEAR)) + "\n" +
            "\n" +
-           FormatParagraph(strprintf(_("Copyright (C) 2017-%i The PAWS Core Developers"), COPYRIGHT_YEAR)) + "\n" +
+           FormatParagraph(strprintf(_("Copyright (C) 2018-%i The PAWS Core Developers"), COPYRIGHT_YEAR)) + "\n" +
            "\n" +
            FormatParagraph(_("This is experimental software.")) + "\n" +
            "\n" +
@@ -1061,7 +1065,7 @@ bool AppInit2(boost::thread_group& threadGroup)
             filesystem::path chainstateDir = GetDataDir() / "chainstate";
             filesystem::path sporksDir = GetDataDir() / "sporks";
             filesystem::path zerocoinDir = GetDataDir() / "zerocoin";
-            
+
             LogPrintf("Deleting blockchain folders blocks, chainstate, sporks and zerocoin\n");
             // We delete in 4 individual steps in case one of the folder is missing already
             try {
@@ -1638,7 +1642,7 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     // ********************************************************* Step 10: setup ObfuScation
 	InitRPCMining();
-    
+
 	uiInterface.InitMessage(_("Loading masternode cache..."));
 
     CMasternodeDB mndb;

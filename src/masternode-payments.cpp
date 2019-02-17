@@ -303,9 +303,9 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int64_t nFe
 
     CAmount blockValue = GetBlockValue(pindexPrev->nHeight);
     CAmount masternodePayment = GetMasternodePayment(pindexPrev->nHeight, blockValue) - EmergencyFund(blockValue) - OperationFund(blockValue);
-	CAmount nonPoSPayment = GetMasternodePayment(pindexPrev->nHeight, blockValue);
-	CAmount emergencyFundPayment = EmergencyFund(blockValue);
-	CAmount operationFundPayment = OperationFund(blockValue);
+  	CAmount nonPoSPayment = GetMasternodePayment(pindexPrev->nHeight, blockValue);
+  	CAmount emergencyFundPayment = EmergencyFund(blockValue);
+  	CAmount operationFundPayment = OperationFund(blockValue);
 
     if (hasPayment) {
         if (fProofOfStake) {
@@ -315,60 +315,60 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int64_t nFe
              * An additional output is appended as the masternode payment
              */
             unsigned int i = txNew.vout.size();
-			if (pindexPrev->nHeight >= DON_BLOCK) {
-				txNew.vout.resize(i + 3);
-				txNew.vout[i + 2].scriptPubKey = CreateOpFundScriptPubKey();
-				txNew.vout[i + 2].nValue = operationFundPayment;
-				txNew.vout[i + 1].scriptPubKey = CreateEmFundScriptPubKey();
-				txNew.vout[i + 1].nValue = emergencyFundPayment;
-				txNew.vout[i].scriptPubKey = payee;
-				if (nonPoSPayment > 0) {
-					txNew.vout[i].nValue = masternodePayment;
-				} else {
-					txNew.vout[i].nValue = 0;
-				}
-			} else {
-				txNew.vout.resize(i + 1);
-				txNew.vout[i].scriptPubKey = payee;
-				if (nonPoSPayment > 0) {
-					txNew.vout[i].nValue = masternodePayment;
-				} else {
-					txNew.vout[i].nValue = 0;
-				}
-			}
+      			if (pindexPrev->nHeight >= DON_BLOCK) {
+      				txNew.vout.resize(i + 3);
+      				txNew.vout[i + 2].scriptPubKey = OpFundScriptPubKey();
+      				txNew.vout[i + 2].nValue = operationFundPayment;
+      				txNew.vout[i + 1].scriptPubKey = EmFundScriptPubKey();
+      				txNew.vout[i + 1].nValue = emergencyFundPayment;
+      				txNew.vout[i].scriptPubKey = payee;
+      				if (nonPoSPayment > 0) {
+      					txNew.vout[i].nValue = masternodePayment;
+      				} else {
+      					txNew.vout[i].nValue = 0;
+      				}
+      			} else {
+      				txNew.vout.resize(i + 1);
+      				txNew.vout[i].scriptPubKey = payee;
+      				if (nonPoSPayment > 0) {
+      					txNew.vout[i].nValue = masternodePayment;
+      				} else {
+      					txNew.vout[i].nValue = 0;
+      				}
+      			}
 
             //subtract mn payment from the stake reward
-			if (nonPoSPayment > 0) {
-					txNew.vout[i - 1].nValue -= nonPoSPayment;
-				} else {
-					txNew.vout[i - 1].nValue += masternodePayment;
-				}
+    			  if (nonPoSPayment > 0) {
+    					txNew.vout[i - 1].nValue -= nonPoSPayment;
+    				} else {
+    					txNew.vout[i - 1].nValue += masternodePayment;
+    				}
         } else {
-			if (pindexPrev->nHeight >= DON_BLOCK) {
-				txNew.vout.resize(4);
-				txNew.vout[3].scriptPubKey = CreateOpFundScriptPubKey();
-				txNew.vout[3].nValue = operationFundPayment;
-				txNew.vout[2].scriptPubKey = CreateEmFundScriptPubKey();
-				txNew.vout[2].nValue = emergencyFundPayment;
-				txNew.vout[1].scriptPubKey = payee;
-				if (nonPoSPayment > 0) {
-					txNew.vout[1].nValue = masternodePayment;
-					txNew.vout[0].nValue = blockValue - nonPoSPayment;
-				} else {
-					txNew.vout[1].nValue = 0;
-					txNew.vout[0].nValue = blockValue + masternodePayment;
-				}
-			} else {
-				txNew.vout.resize(2);
-				txNew.vout[1].scriptPubKey = payee;
-				if (nonPoSPayment > 0) {
-					txNew.vout[1].nValue = masternodePayment;
-					txNew.vout[0].nValue = blockValue - nonPoSPayment;
-				} else {
-					txNew.vout[1].nValue = 0;
-					txNew.vout[0].nValue = blockValue + masternodePayment;
-				}
-			}
+      			if (pindexPrev->nHeight >= DON_BLOCK) {
+      				txNew.vout.resize(4);
+      				txNew.vout[3].scriptPubKey = OpFundScriptPubKey();
+      				txNew.vout[3].nValue = operationFundPayment;
+      				txNew.vout[2].scriptPubKey = EmFundScriptPubKey();
+      				txNew.vout[2].nValue = emergencyFundPayment;
+      				txNew.vout[1].scriptPubKey = payee;
+      				if (nonPoSPayment > 0) {
+      					txNew.vout[1].nValue = masternodePayment;
+      					txNew.vout[0].nValue = blockValue - nonPoSPayment;
+      				} else {
+      					txNew.vout[1].nValue = 0;
+      					txNew.vout[0].nValue = blockValue + masternodePayment;
+      				}
+      			} else {
+      				txNew.vout.resize(2);
+      				txNew.vout[1].scriptPubKey = payee;
+      				if (nonPoSPayment > 0) {
+      					txNew.vout[1].nValue = masternodePayment;
+      					txNew.vout[0].nValue = blockValue - nonPoSPayment;
+      				} else {
+      					txNew.vout[1].nValue = 0;
+      					txNew.vout[0].nValue = blockValue + masternodePayment;
+      				}
+      			}
         }
 
         CTxDestination address1;
@@ -376,6 +376,7 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int64_t nFe
         CBitcoinAddress address2(address1);
 
         LogPrint("masternode","Masternode payment of %s to %s\n", FormatMoney(masternodePayment).c_str(), address2.ToString().c_str());
+        
     } else {
 		if (!fProofOfStake)
 			if (nonPoSPayment > 0) {

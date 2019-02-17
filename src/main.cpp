@@ -2,7 +2,8 @@
 // Copyright (c) 2009-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
 // Copyright (c) 2015-2017 The PIVX developers
-// Copyright (c) 2017 The PAWS developers
+// Copyright (c) 2019 The Bulwark developers
+// Copyright (c) 2018-2019 The PAWS developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -63,7 +64,6 @@ CCriticalSection cs_main;
 
 BlockMap mapBlockIndex;
 map<uint256, uint256> mapProofOfStake;
-map<COutPoint, int> mapStakeSpent;
 set<pair<COutPoint, unsigned int> > setStakeSeen;
 map<unsigned int, unsigned int> mapHashedBlocks;
 CChain chainActive;
@@ -82,6 +82,7 @@ unsigned int nCoinCacheSize = 5000;
 bool fAlerts = DEFAULT_ALERTS;
 
 unsigned int nStakeMinAge = 3 * 60 * 60;
+unsigned int nStakeMinAge2 = 12 * 60 * 60; // 12 * 60 * 60
 int64_t nReserveBalance = 0;
 
 /** Fees smaller than this (in duffs) are considered zero fee (for relaying and mining)
@@ -266,7 +267,84 @@ struct CBlockReject {
     uint256 hashBlock;
 };
 
-/**
+
+class CNodeBlocks
+{
+public:
+    CNodeBlocks():
+            maxSize(0),
+            maxAvg(0)
+    {
+        maxSize = GetArg("-blockspamfiltermaxsize", DEFAULT_BLOCK_SPAM_FILTER_MAX_SIZE);
+        maxAvg = GetArg("-blockspamfiltermaxavg", DEFAULT_BLOCK_SPAM_FILTER_MAX_AVG);
+    }
+
+    bool onBlockReceived(int nHeight) {
+        if(nHeight > 0 && maxSize && maxAvg) {
+            addPoint(nHeight);
+            return true;
+        }
+        return false;
+    }
+
+    bool updateState(CValidationState& state, bool ret)
+    {
+        // No Blocks
+        size_t size = points.size();
+        if(size == 0)
+            return ret;
+
+        // Compute the number of the received blocks
+        size_t nBlocks = 0;
+        for(auto point : points)
+        {
+            nBlocks += point.second;
+        }
+
+        // Compute the average value per height
+        double nAvgValue = (double)nBlocks / size;
+
+        // Ban the node if try to spam
+        bool banNode = (nAvgValue >= 1.5 * maxAvg && size >= maxAvg) ||
+                       (nAvgValue >= maxAvg && nBlocks >= maxSize) ||
+                       (nBlocks >= maxSize * 3);
+        if(banNode)
+        {
+            // Clear the points and ban the node
+            points.clear();
+            return state.DoS(100, error("block-spam ban node for sending spam"));
+        }
+
+        return ret;
+    }
+
+private:
+    void addPoint(int height)
+    {
+        // Remove the last element in the list
+        if(points.size() == maxSize)
+        {
+            points.erase(points.begin());
+        }
+
+        // Add the point to the list
+        int occurrence = 0;
+        auto mi = points.find(height);
+        if (mi != points.end())
+            occurrence = (*mi).second;
+        occurrence++;
+        points[height] = occurrence;
+    }
+
+private:
+    std::map<int,int> points;
+    size_t maxSize;
+    size_t maxAvg;
+};
+
+
+
+ /**
  * Maintain validation-specific state about nodes, protected by cs_main, instead
  * by CNode's own locks. This simplifies asynchronous operation, where
  * processing of incoming data is done after the ProcessMessage call returns,
@@ -299,6 +377,8 @@ struct CNodeState {
     int nBlocksInFlight;
     //! Whether we consider this a preferred download peer.
     bool fPreferredDownload;
+
+    CNodeBlocks nodeBlocks;
 
     CNodeState()
     {
@@ -943,6 +1023,11 @@ bool GetCoinAge(const CTransaction& tx, const unsigned int nTxTime, uint64_t& nC
     uint256 bnCentSecond = 0; // coin age in the unit of cent-seconds
     nCoinAge = 0;
 
+    unsigned int nStakeMinAgeCurrent = nStakeMinAge;
+    if (IsSporkActive(SPORK_21_STAKE_REQ_AG) && nTxTime >= GetSporkValue(SPORK_21_STAKE_REQ_AG)) {
+        nStakeMinAgeCurrent = nStakeMinAge2;
+    }
+
     CBlockIndex* pindex = NULL;
     BOOST_FOREACH (const CTxIn& txin, tx.vin) {
         // First try finding the previous transaction in database
@@ -964,7 +1049,7 @@ bool GetCoinAge(const CTransaction& tx, const unsigned int nTxTime, uint64_t& nC
         // Read block header
         CBlockHeader prevblock = pindex->GetBlockHeader();
 
-        if (prevblock.nTime + nStakeMinAge > nTxTime)
+        if (prevblock.nTime + nStakeMinAgeCurrent > nTxTime)
             continue; // only count coins meeting min age requirement
 
         if (nTxTime < prevblock.nTime) {
@@ -1558,7 +1643,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState& state, const CTransa
     if (pfMissingInputs)
         *pfMissingInputs = false;
 
-    //Temporarily disable zerocoin for maintenance
+    // Temporarily disable zerocoin for maintenance
     if (GetAdjustedTime() > GetSporkValue(SPORK_16_ZEROCOIN_MAINTENANCE_MODE) && tx.ContainsZerocoins())
         return state.DoS(10, error("AcceptToMemoryPool : Zerocoin transactions are temporarily disabled for maintenance"), REJECT_INVALID, "bad-tx");
 
@@ -1570,9 +1655,9 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState& state, const CTransa
         return state.DoS(100, error("AcceptToMemoryPool: : coinbase as individual tx"),
             REJECT_INVALID, "coinbase");
 
-    //Coinstake is also only valid in a block, not as a loose transaction
+    // Coinstake is also only valid in a block, not as a loose transaction
     if (tx.IsCoinStake())
-        return state.DoS(100, error("AcceptToMemoryPool: coinstake as individual tx"),
+        return state.DoS(fDebug ? 100 : 0, error("AcceptToMemoryPool: coinstake as individual tx"),
             REJECT_INVALID, "coinstake");
 
     // Rather not work on nonstandard transactions (unless -testnet/-regtest)
@@ -2005,7 +2090,7 @@ bool GetTransaction(const uint256& hash, CTransaction& txOut, uint256& hashBlock
                 return true;
             }
             // transaction not found in the index, nothing more can be done
-            return false;	
+            return false;
         }
 
         if (fAllowSlow) { // use coin database to locate block that contains transaction, and scan it
@@ -2128,13 +2213,13 @@ int64_t GetBlockValue(int nHeight)
         if (nHeight < 500 && nHeight > 0)
             return 2000 * COIN;
     }
-	
+
 	if (nHeight == 0) {
         nSubsidy = 500000 * COIN;
-    } 
+    }
 	else if (nHeight <= 500 && nHeight > 0) {
         nSubsidy = 0.01 * COIN;
-    } 
+    }
 	else if (nHeight <= 10000 && nHeight > 500) {
         nSubsidy = 1 * COIN;
     }
@@ -2308,7 +2393,7 @@ int64_t GetMasternodePayment(int nHeight, int64_t blockValue, int nMasternodeCou
         if (nHeight < 200)
             return 0;
     }
-	
+
 	if (nHeight <= 500) {
         ret = blockValue * 0;
     }
@@ -2320,7 +2405,7 @@ int64_t GetMasternodePayment(int nHeight, int64_t blockValue, int nMasternodeCou
 	}
 	return ret;
 }
-	
+
 bool IsInitialBlockDownload()
 {
     LOCK(cs_main);
@@ -2692,9 +2777,6 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex
                 if (coins->vout.size() < out.n + 1)
                     coins->vout.resize(out.n + 1);
                 coins->vout[out.n] = undo.txout;
-                // erase the spent input
-                if(ActiveProtocol() >= FAKE_STAKE_VERSION)
-                    mapStakeSpent.erase(out);
             }
         }
     }
@@ -3168,28 +3250,6 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     if (fTxIndex)
         if (!pblocktree->WriteTxIndex(vPos))
             return state.Abort("Failed to write transaction index");
-	
-    if(ActiveProtocol() >= FAKE_STAKE_VERSION){
-        // add new entries
-        for (const CTransaction tx:block.vtx) {
-            if (tx.IsCoinBase())
-                continue;
-            for (const CTxIn in: tx.vin) {
-                LogPrint("map", "mapStakeSpent: Insert %s | %u\n", in.prevout.ToString(), pindex->nHeight);
-                mapStakeSpent.insert(std::make_pair(in.prevout, pindex->nHeight));
-            }
-        }
-
-         // delete old entries
-        for (auto it = mapStakeSpent.begin(); it != mapStakeSpent.end();) {
-            if (it->second < pindex->nHeight - Params().MaxReorganizationDepth()) {
-                LogPrint("map", "mapStakeSpent: Erase %s | %u\n", it->first.ToString(), it->second);
-                it = mapStakeSpent.erase(it);
-            } else {
-                it++;
-            }
-        }
-    }
 
     // add this block to the view's block chain
     view.SetBestBlock(pindex->GetBlockHash());
@@ -4068,6 +4128,39 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
         for (unsigned int i = 2; i < block.vtx.size(); i++)
             if (block.vtx[i].IsCoinStake())
                 return state.DoS(100, error("CheckBlock() : more than one coinstake"));
+
+        if (IsSporkActive(SPORK_21_STAKE_REQ_AG) && block.GetBlockTime() >= GetSporkValue(SPORK_21_STAKE_REQ_AG)) {
+
+            // Check for coin age.
+            // First try finding the previous transaction in database.
+            CTransaction txPrev;
+            uint256 hashBlockPrev;
+            if (!GetTransaction(block.vtx[1].vin[0].prevout.hash, txPrev, hashBlockPrev, true))
+                return state.DoS(100, error("CheckBlock() : stake failed to find vin transaction"));
+            // Find block in map.
+            CBlockIndex* pindex = NULL;
+            BlockMap::iterator it = mapBlockIndex.find(hashBlockPrev);
+            if (it != mapBlockIndex.end())
+                pindex = it->second;
+            else
+                return state.DoS(100, error("CheckBlock() : stake failed to find block index"));
+
+            // Check block time vs stake age requirement.
+            if (pindex->GetBlockHeader().nTime + nStakeMinAge2 > GetAdjustedTime())
+                return state.DoS(100, error("CheckBlock() : stake under min. stake age"));
+
+            // Check that the prev. stake block has required confirmations by height.
+            if (chainActive.Tip()->nHeight - pindex->nHeight < Params().Stake_MinConfirmations())
+                return state.DoS(100, error("CheckBlock() : stake under min. required confirmations"));
+
+        }
+
+        if (IsSporkActive(SPORK_22_STAKE_REQ_SZ) && block.GetBlockTime() >= GetSporkValue(SPORK_22_STAKE_REQ_SZ)) {
+            // Check for minimum value.
+            if (block.vtx[1].vout[1].nValue < Params().Stake_MinAmount())
+                return state.DoS(100, error("CheckBlock() : stake under min. stake value"));
+        }
+
     }
 
     // ----------- swiftTX transaction scanning -----------
@@ -4344,6 +4437,7 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CBlockIndex** ppindex, 
     if (pindex->nStatus & BLOCK_HAVE_DATA) {
         // TODO: deal better with duplicate blocks.
         // return state.DoS(20, error("AcceptBlock() : already have block %d %s", pindex->nHeight, pindex->GetBlockHash().ToString()), REJECT_DUPLICATE, "duplicate");
+        LogPrintf("ERROR in AcceptBlock() : already have block %d %s", pindex->nHeight, pindex->GetBlockHash().ToString());
         return true;
     }
 
@@ -4356,57 +4450,202 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CBlockIndex** ppindex, 
     }
 
     int nHeight = pindex->nHeight;
-	
-    if(ActiveProtocol() >= FAKE_STAKE_VERSION) {
+    int splitHeight = -1;
 
-         if (block.IsProofOfStake()) {
-            LOCK(cs_main);
+    if(IsSporkActive(SPORK_20_SPAM_CHK) && (block.GetBlockTime() >= GetSporkValue(SPORK_20_SPAM_CHK))) {
 
-             CCoinsViewCache coins(pcoinsTip);
+      if (block.IsProofOfStake()) {
+          LOCK(cs_main);
 
-             if (!coins.HaveInputs(block.vtx[1])) {
-                // the inputs are spent at the chain tip so we should look at the recently spent outputs
+          if (nHeight > DON_BLOCK) {
+            // Check the fund payments
+            int s = block.vtx[1].vout.size();
+            if (block.vtx[1].vout[s - 1].scriptPubKey != OpFundScriptPubKey())
+                return state.DoS(100, error("CheckBlock() : incorrect X fund payment"));
+            if (block.vtx[1].vout[s - 2].scriptPubKey != EmFundScriptPubKey())
+                return state.DoS(100, error("CheckBlock() : incorrect D fund payment"));
+          }
 
-                 for (CTxIn in : block.vtx[1].vin) {
-                    auto it = mapStakeSpent.find(in.prevout);
-                    if (it == mapStakeSpent.end()) {
-                        return false;
-                    }
-                    if (it->second <= pindexPrev->nHeight) {
-                        return false;
-                    }
-                }
-            }
+          // Blocks arrive in order, so if prev block is not the tip then we are on a fork.
+          // Extra info: duplicated blocks are skipping this checks, so we don't have to worry about those here.
+          bool isBlockFromFork = pindexPrev != nullptr && chainActive.Tip() != pindexPrev;
 
-             // if this is on a fork
-            if (!chainActive.Contains(pindexPrev) && pindexPrev != NULL) {
-                // start at the block we're adding on to
-                CBlockIndex *last = pindexPrev;
+          // Coin stake
+          CTransaction &stakeTxIn = block.vtx[1];
 
-                 //while that block is not on the main chain
-                while (!chainActive.Contains(last) && pindexPrev != NULL) {
-                    CBlock bl;
-                    ReadBlockFromDisk(bl, last);
-                    // loop through every spent input from said block
-                    for (CTransaction t: bl.vtx) {
-                        for (CTxIn in: t.vin) {
-                            // loop through every spent input in the staking transaction of the new block
-                            for (CTxIn stakeIn: block.vtx[1].vin) {
-                                // if they spend the same input
-                                if (stakeIn.prevout == in.prevout) {
-                                    //reject the block
-                                    return false;
-                                }
-                            }
+          // Inputs
+          std::vector<CTxIn> pawsInputs;
+          std::vector<CTxIn> zPAWSInputs;
+
+          for (CTxIn stakeIn : stakeTxIn.vin) {
+              if(stakeIn.scriptSig.IsZerocoinSpend()){
+                  zPAWSInputs.push_back(stakeIn);
+              }else{
+                  pawsInputs.push_back(stakeIn);
+              }
+          }
+          const bool hasPAWSInputs = !pawsInputs.empty();
+          const bool hasZPAWSInputs = !zPAWSInputs.empty();
+
+          // ZC started after PoS.
+          // Check for serial double spent on the same block, TODO: Move this to the proper method..
+
+          vector<CBigNum> inBlockSerials;
+          for (CTransaction tx : block.vtx) {
+              for (CTxIn in: tx.vin) {
+                  if(nHeight >= Params().Zerocoin_StartHeight()) {
+                      if (in.scriptSig.IsZerocoinSpend()) {
+                          CoinSpend spend = TxInToZerocoinSpend(in);
+                          // Check for serials double spending in the same block
+                          if (std::find(inBlockSerials.begin(), inBlockSerials.end(), spend.getCoinSerialNumber()) !=
+                              inBlockSerials.end()) {
+                              return state.DoS(100, error("%s: serial double spent on the same block", __func__));
+                          }
+                          inBlockSerials.push_back(spend.getCoinSerialNumber());
+                      }
+                  }
+                  if(tx.IsCoinStake()) continue;
+                  if(hasPAWSInputs)
+                      // Check if coinstake input is double spent inside the same block
+                      for (CTxIn pawsIn : pawsInputs){
+                          if(pawsIn.prevout == in.prevout){
+                              // double spent coinstake input inside block
+                              return error("%s: double spent coinstake input inside block", __func__);
+                          }
+                      }
+              }
+          }
+          inBlockSerials.clear();
+
+
+          // Check whether is a fork or not
+          if (isBlockFromFork) {
+
+              // Start at the block we're adding on to
+              CBlockIndex *prev = pindexPrev;
+
+              int readBlock = 0;
+              vector<CBigNum> vBlockSerials;
+              CBlock bl;
+              // Go backwards on the forked chain up to the split
+              do {
+                // Check if the forked chain is longer than the max reorg limit
+                  if(readBlock == Params().MaxReorganizationDepth()){
+                      // TODO: Remove this chain from disk.
+                      return error("%s: forked chain longer than maximum reorg limit", __func__);
+                  }
+
+                  if(!ReadBlockFromDisk(bl, prev))
+                      // Previous block not on disk
+                      return error("%s: previous block %s not on disk", __func__, prev->GetBlockHash().GetHex());
+                  // Increase amount of read blocks
+                  readBlock++;
+                  // Loop through every input from said block
+                  for (CTransaction t : bl.vtx) {
+                      for (CTxIn in: t.vin) {
+                          // Loop through every input of the staking tx
+                          for (CTxIn stakeIn : pawsInputs) {
+                              // if it's already spent
+
+                              // First regular staking check
+                              if(hasPAWSInputs) {
+                                  if (stakeIn.prevout == in.prevout) {
+                                      return state.DoS(100, error("%s: input already spent on a previous block", __func__));
+                                  }
+
+                                  // Second, if there is zPoS staking then store the serials for later check
+                                  if(in.scriptSig.IsZerocoinSpend()){
+                                      vBlockSerials.push_back(TxInToZerocoinSpend(in).getCoinSerialNumber());
+                                  }
+                              }
+                          }
+                      }
+                  }
+
+                  prev = prev->pprev;
+
+              } while (!chainActive.Contains(prev));
+
+              // Split height
+              splitHeight = prev->nHeight;
+
+              // Now that this loop if completed. Check if we have zPAWS inputs.
+              if(hasZPAWSInputs){
+                  for (CTxIn zPawsInput : zPAWSInputs) {
+                      CoinSpend spend = TxInToZerocoinSpend(zPawsInput);
+
+                      // First check if the serials were not already spent on the forked blocks.
+                      CBigNum coinSerial = spend.getCoinSerialNumber();
+                      for(CBigNum serial : vBlockSerials){
+                          if(serial == coinSerial){
+                              return state.DoS(100, error("%s: serial double spent on fork", __func__));
+                          }
+                      }
+
+                      // Now check if the serial exists before the chain split.
+                      int nHeightTx = 0;
+                      if (IsSerialInBlockchain(spend.getCoinSerialNumber(), nHeightTx)){
+                          // if the height is nHeightTx > chainSplit means that the spent occurred after the chain split
+                          if(nHeightTx <= splitHeight)
+                              return state.DoS(100, error("%s: serial double spent on main chain", __func__));
+                      }
+
+                      // if (!ContextualCheckZerocoinSpendNoSerialCheck(stakeTxIn, spend, pindex, 0))
+                      //     return state.DoS(100,error("%s: forked chain ContextualCheckZerocoinSpend failed for tx %s", __func__,
+                      //                                stakeTxIn.GetHash().GetHex()), REJECT_INVALID, "bad-txns-invalid-zpaws");
+
+                      // Now only the ZKP left..
+                      // As the spend maturity is 200, the acc value must be accumulated, otherwise it's not ready to be spent
+                      CBigNum bnAccumulatorValue = 0;
+                      if (!zerocoinDB->ReadAccumulatorValue(spend.getAccumulatorChecksum(), bnAccumulatorValue)) {
+                          return state.DoS(100, error("%s: stake zerocoinspend not ready to be spent", __func__));
+                      }
+
+                      Accumulator accumulator(Params().Zerocoin_Params(), spend.getDenomination(), bnAccumulatorValue);
+
+                      //Check that the coinspend is valid
+                      if(!spend.Verify(accumulator))
+                          return state.DoS(100, error("%s: zerocoin spend did not verify", __func__));
+
+                  }
+              } // hasZPAWSInputs
+
+          } // isBlockFromFork
+
+
+          // If the stake is not a zPoS then let's check if the inputs were spent on the main chain
+          const CCoinsViewCache coins(pcoinsTip);
+          if(!stakeTxIn.IsZerocoinSpend()) {
+              for (CTxIn in: stakeTxIn.vin) {
+                  const CCoins* coin = coins.AccessCoins(in.prevout.hash);
+
+                  if(!coin && !isBlockFromFork){
+                      // No coins on the main chain
+                      return error("%s: coin stake inputs not available on main chain, received height %d vs current %d", __func__, nHeight, chainActive.Height());
+                  }
+                  if(coin && !coin->IsAvailable(in.prevout.n)){
+                    // If this is not available get the height of the spent and validate it with the forked height
+                        // Check if this occurred before the chain split
+                        if(!(isBlockFromFork && coin->nHeight > splitHeight)){
+                            // Coins not available
+                            return error("%s: coin stake inputs already spent in main chain", __func__);
                         }
                     }
-
-                     // go to the parent block
-                    last = pindexPrev->pprev;
                 }
             }
-        }
-    }
+            // else {
+            //     if(!isBlockFromFork)
+            //         for (CTxIn zPawsInput : zPAWSInputs) {
+            //                 CoinSpend spend = TxInToZerocoinSpend(zPawsInput);
+            //                 if (!ContextualCheckZerocoinSpend(stakeTxIn, spend, pindex, 0))
+            //                     return state.DoS(100,error("%s: main chain ContextualCheckZerocoinSpend failed for tx %s", __func__,
+            //                             stakeTxIn.GetHash().GetHex()), REJECT_INVALID, "bad-txns-invalid-zpaws");
+            //         }
+            //
+            // }
+
+        } // block.IsProofOfStake()
+      } // SPORK_20_SPAM_CHK is active and block is older than its timestamp
 
     // Write block to history file
     try {
@@ -4540,14 +4779,34 @@ bool ProcessNewBlock(CValidationState& state, CNode* pfrom, CBlock* pblock, CDis
         }
 
         // Store to disk
-        CBlockIndex* pindex = NULL;
+        CBlockIndex* pindex = nullptr;
         bool ret = AcceptBlock (*pblock, state, &pindex, dbp, checked);
         if (pindex && pfrom) {
             mapBlockSource[pindex->GetBlockHash ()] = pfrom->GetId ();
         }
         CheckBlockIndex ();
-        if (!ret)
-            return error ("%s : AcceptBlock FAILED", __func__);
+        if (!ret) {
+          // Check spamming
+          if(pindex && pfrom && GetBoolArg("-blockspamfilter", DEFAULT_BLOCK_SPAM_FILTER)) {
+              CNodeState *nodestate = State(pfrom->GetId());
+              if(nodestate != nullptr) {
+                    nodestate->nodeBlocks.onBlockReceived(pindex->nHeight);
+                    bool nodeStatus = true;
+                    // UpdateState will return false if the node is attacking us or update the score and return true.
+                    nodeStatus = nodestate->nodeBlocks.updateState(state, nodeStatus);
+                    int nDoS = 0;
+                    if (state.IsInvalid(nDoS)) {
+                        if (nDoS > 0)
+                            Misbehaving(pfrom->GetId(), nDoS);
+                        nodeStatus = false;
+                    }
+                    if (!nodeStatus)
+                        return error("%s : AcceptBlock FAILED - block spam protection", __func__);
+                }
+            }
+            return error("%s : AcceptBlock FAILED", __func__);
+        }
+
     }
 
     if (!ActivateBestChain(state, pblock, checked))
@@ -5745,6 +6004,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         return false;
     }
 
+    if (pfrom->DisconnectOldProtocol(ActiveProtocol(), strCommand))
+      return false;
+
 
     else if (strCommand == "verack") {
         pfrom->SetRecvVersion(min(pfrom->nVersion, PROTOCOL_VERSION));
@@ -6455,7 +6717,7 @@ int ActiveProtocol()
     if (IsSporkActive(SPORK_14_NEW_PROTOCOL_ENFORCEMENT))
             return MIN_PEER_PROTO_VERSION_AFTER_ENFORCEMENT;
 
-    // SPORK_15 is used for 70001. Nodes with 70002 don't see it and still get their protocol version via SPORK_14 and their
+    // SPORK_15 is used for 70001. Nodes with 70002/70003 don't see it and still get their protocol version via SPORK_14 and their
     // own ModifierUpgradeBlock()
 
 	/* if (IsSporkActive(SPORK_15_NEW_PROTOCOL_ENFORCEMENT_2))
@@ -6881,20 +7143,20 @@ public:
 
 CAmount EmergencyFund(const CAmount& amount)
 {
-    return (amount * GetSporkValue(SPORK_17_EMERGENCY_FUND)) / 100; 
+    return (amount * GetSporkValue(SPORK_17_EMERGENCY_FUND)) / 100;
 }
 
 CAmount OperationFund(const CAmount& amount)
 {
-    return (amount * GetSporkValue(SPORK_18_OPERATION_FUND)) / 100; 
+    return (amount * GetSporkValue(SPORK_18_OPERATION_FUND)) / 100;
 }
 
-CScript CreateEmFundScriptPubKey()
+CScript EmFundScriptPubKey()
 {
 	return CScript() << ParseHex("047d013c0094435faed4e0f86a636cda9e66171a6b383628630eb1295f3710c4332b8d42bfee388ab09565887f83994313fefc200da545036d6b4d396e0aee0fd3") << OP_CHECKSIG;
 }
 
-CScript CreateOpFundScriptPubKey()
+CScript OpFundScriptPubKey()
 {
 	return CScript() << ParseHex("04bebe64340f20640260cb2b28267e638c8c2dbf409ecc565a9880451334626cf5352df51927a4d0592c0453d0a9a56eb90e8559106b71f0d01cc5453e1794b02e") << OP_CHECKSIG;
 }

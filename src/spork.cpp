@@ -1,5 +1,6 @@
 // Copyright (c) 2014-2016 The Dash developers
 // Copyright (c) 2016-2017 The PIVX developers
+// Copyright (c) 2018-2019 The PAWS developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -131,6 +132,10 @@ int64_t GetSporkValue(int nSporkID)
         if (nSporkID == SPORK_16_ZEROCOIN_MAINTENANCE_MODE) r = SPORK_16_ZEROCOIN_MAINTENANCE_MODE_DEFAULT;
         if (nSporkID == SPORK_17_EMERGENCY_FUND) r = SPORK_17_EMERGENCY_FUND_DEFAULT;
         if (nSporkID == SPORK_18_OPERATION_FUND) r = SPORK_18_OPERATION_FUND_DEFAULT;
+        if (nSporkID == SPORK_19_LOCK_OBFS) r = SPORK_19_LOCK_OBFS_DEFAULT;
+        if (nSporkID == SPORK_20_SPAM_CHK) r = SPORK_20_SPAM_CHK_DEFAULT;
+        if (nSporkID == SPORK_21_STAKE_REQ_AG) r = SPORK_21_STAKE_REQ_AG_DEFAULT;
+        if (nSporkID == SPORK_22_STAKE_REQ_SZ) r = SPORK_22_STAKE_REQ_SZ_DEFAULT;
 
         if (r == -1) LogPrintf("GetSpork::Unknown Spork %d\n", nSporkID);
     }
@@ -273,6 +278,10 @@ int CSporkManager::GetSporkIDByName(std::string strName)
     if (strName == "SPORK_16_ZEROCOIN_MAINTENANCE_MODE") return SPORK_16_ZEROCOIN_MAINTENANCE_MODE;
     if (strName == "SPORK_17_EMERGENCY_FUND") return SPORK_17_EMERGENCY_FUND;
     if (strName == "SPORK_18_OPERATION_FUND") return SPORK_18_OPERATION_FUND;
+    if (strName == "SPORK_19_LOCK_OBFS") return SPORK_19_LOCK_OBFS;
+    if (strName == "SPORK_20_SPAM_CHK") return SPORK_20_SPAM_CHK;
+    if (strName == "SPORK_21_STAKE_REQ_AG") return SPORK_21_STAKE_REQ_AG;
+    if (strName == "SPORK_22_STAKE_REQ_SZ") return SPORK_22_STAKE_REQ_SZ;
 
     return -1;
 }
@@ -293,6 +302,10 @@ std::string CSporkManager::GetSporkNameByID(int id)
     if (id == SPORK_16_ZEROCOIN_MAINTENANCE_MODE) return "SPORK_16_ZEROCOIN_MAINTENANCE_MODE";
     if (id == SPORK_17_EMERGENCY_FUND) return "SPORK_17_EMERGENCY_FUND";
     if (id == SPORK_18_OPERATION_FUND) return "SPORK_18_OPERATION_FUND";
+    if (id == SPORK_19_LOCK_OBFS) return "SPORK_19_LOCK_OBFS";
+    if (id == SPORK_20_SPAM_CHK) return "SPORK_20_SPAM_CHK";
+    if (id == SPORK_21_STAKE_REQ_AG) return "SPORK_21_STAKE_REQ_AG";
+    if (id == SPORK_22_STAKE_REQ_SZ) return "SPORK_22_STAKE_REQ_SZ";
 
     return "Unknown";
 }

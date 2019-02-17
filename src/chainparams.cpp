@@ -2,7 +2,7 @@
 // Copyright (c) 2009-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
 // Copyright (c) 2015-2017 The PIVX developers
-// Copyright (c) 2018 The PAWS developers
+// Copyright (c) 2018-2019 The PAWS developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -144,7 +144,7 @@ public:
         nBlockRecalculateAccumulators = ~1; //Trigger a recalculation of accumulators
         nBlockFirstFraudulent = ~1; //First block that bad serials emerged
         nBlockLastGoodCheckpoint = ~1; //Last valid accumulator checkpoint
-        
+
         const char* pszTimestamp = "Oct 24 2018 - Boost VC Just Fulfilled a Crypto Funding Pledge 4 Years in the Making";
         CMutableTransaction txNew;
         txNew.vin.resize(1);
@@ -163,14 +163,14 @@ public:
 		hashGenesisBlock = genesis.GetHash();
         assert(hashGenesisBlock == uint256("00000ec09839a7ed9b5854ae86c724f02d1883011275595a91e069dc129c263c"));
         assert(genesis.hashMerkleRoot == uint256("3449867fb04c7671f02a5bf91b0f4d9637c612d86c3e026851e93b417afc454e"));
-		
+
 		vSeeds.push_back(CDNSSeedData("45.32.145.142", "45.32.145.142"));
 		vSeeds.push_back(CDNSSeedData("95.179.200.213", "95.179.200.213"));
 		vSeeds.push_back(CDNSSeedData("45.63.10.156", "45.63.10.156"));
 		vSeeds.push_back(CDNSSeedData("144.202.53.246", "144.202.53.246"));
 		vSeeds.push_back(CDNSSeedData("104.207.130.217", "104.207.130.217"));
 		vSeeds.push_back(CDNSSeedData("45.77.5.22", "45.77.5.22"));
-		
+
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1, 55);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1, 73);
         base58Prefixes[SECRET_KEY] = std::vector<unsigned char>(1, 200);
@@ -210,6 +210,9 @@ public:
         nDefaultSecurityLevel = 100; //full security level for accumulators
         nZerocoinHeaderVersion = 4; //Block headers must be this version once zerocoin is active
         nBudget_Fee_Confirmations = 6; // Number of confirmations for the finalization fee
+
+        nStakeMinConfirmations = 720;   // Required number of confirmations
+        nStakeMinAmount = 50 * COIN;    // Minimum required staking amount
     }
 
     const Checkpoints::CCheckpointData& Checkpoints() const
@@ -288,6 +291,9 @@ public:
         nStartMasternodePayments = 1420837558; //Fri, 09 Jan 2015 21:05:58 GMT
         nBudget_Fee_Confirmations = 3; // Number of confirmations for the finalization fee. We have to make this very short
                                        // here because we only have a 8 block finalization window on testnet
+
+        nStakeMinConfirmations = 30;    // Required number of confirmations
+        nStakeMinAmount = 1000 * COIN;  // Minimum required staking amount
     }
     const Checkpoints::CCheckpointData& Checkpoints() const
     {
