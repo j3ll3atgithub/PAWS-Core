@@ -65,8 +65,8 @@ using namespace boost;
 #define SPORK_17_EMERGENCY_FUND_DEFAULT 0                         //0%
 #define SPORK_18_OPERATION_FUND_DEFAULT 0                         //0%
 #define SPORK_19_LOCK_OBFS_DEFAULT 4070908800                     //OFF
-#define SPORK_20_SPAM_CHK_DEFAULT 4070908800                      //OFF
-#define SPORK_21_STAKE_REQ_AG_DEFAULT 4070908800                  //OFF
+#define SPORK_20_SPAM_CHK_DEFAULT 1550606400                      //ON
+#define SPORK_21_STAKE_REQ_AG_DEFAULT 1552399200                  //ON
 #define SPORK_22_STAKE_REQ_SZ_DEFAULT 4070908800                  //OFF
 
 class CSporkMessage;
